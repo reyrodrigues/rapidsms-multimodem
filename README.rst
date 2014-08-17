@@ -9,15 +9,6 @@ rapidsms-multimodem
     :target: http://travis-ci.org/caktus/rapidsms-multimodem
 
 
-Installation
--------------
-
-rapidsms-multimodem requires Django >= 1.3 and Python >= 2.6.
-
-To install from PyPi::
-    
-    pip install rapidsms-multimodem
-
 Documentation
 -------------
 
