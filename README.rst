@@ -1,19 +1,9 @@
 rapidsms-multimodem
 ===================
 
+|build-status| |docs|
+
 `MultiModem iSMS`_ backend for the `RapidSMS`_ project.
-
-.. image::
-    https://api.travis-ci.org/caktus/rapidsms-multimodem.png?branch=develop
-    :alt: Build Status
-    :target: http://travis-ci.org/caktus/rapidsms-multimodem
-
-
-Documentation
--------------
-
-Documentation on using rapidsms-multimodem is available on 
-`Read The Docs <http://readthedocs.org/docs/rapidsms-multimodem/>`_.
 
 
 License
@@ -32,5 +22,16 @@ project check out `rapidsms-multimodem on Github <https://github.com/caktus
 
 Development by `Caktus Consulting Group <http://www.caktusgroup.com/>`_.
 
+
 .. _RapidSMS: http://www.rapidsms.org/
 .. _MultiModem iSMS: http://www.multitech.com/en_US/PRODUCTS/Families/MultiModemiSMS/
+
+.. |build-status| image:: https://travis-ci.org/caktus/rapidsms-multimodem.svg?branch=master
+    :alt: build status
+    :scale: 100%
+    :target: https://travis-ci.org/caktus/rapidsms-multimodem
+
+.. |docs| image:: https://readthedocs.org/projects/rapidsms-multimodem/badge/?version=latest
+    :alt: Documentation Status
+    :scale: 100%
+    :target: https://readthedocs.org/projects/rapidsms-multimodem/
