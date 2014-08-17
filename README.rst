@@ -34,4 +34,4 @@ Development by `Caktus Consulting Group <http://www.caktusgroup.com/>`_.
 .. |docs| image:: https://readthedocs.org/projects/rapidsms-multimodem/badge/?version=latest
     :alt: Documentation Status
     :scale: 100%
-    :target: https://readthedocs.org/projects/rapidsms-multimodem/
+    :target: http://rapidsms-multimodem.readthedocs.org/
