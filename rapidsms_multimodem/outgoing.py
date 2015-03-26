@@ -57,7 +57,7 @@ class MultiModemBackend(BackendBase):
     def send(self, id_, text, identities, context={}):
         logger.debug('Sending message: %s' % text)
         kwargs = self.prepare_request(id_, text, identities, context)
-        logger.warning('params: %s' % pprint.pformat(kwargs["params"]))
+        logger.debug('params: %s' % pprint.pformat(kwargs["params"]))
         params = isms_urlencode(kwargs['params'])
         r = requests.get(url=kwargs['url'], params=params)
         if r.status_code != requests.codes.ok:
