@@ -33,6 +33,7 @@ class MultiModemBackend(BackendBase):
         params['passwd'] = self.sendsms_pass
         params['cat'] = 1
         params['enc'] = ISMS_ASCII
+        params['modem'] = self.sendsms_params.get('modem', 0)
         params['to'] = to
         # 'text' is tricky. iSMS has 3 encodings: ascii, enhanced ascii, and 'unicode'
         # (Note: it's not really Unicode, but a iSMS custom binary format)
