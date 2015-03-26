@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 
 from rapidsms.backends.http.views import GenericHttpBackendView
 
+from .utils import ismsformat_to_unicode
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +24,15 @@ class MultiModemView(GenericHttpBackendView):
         except ET.ParseError:
             logger.error("Failed to parse XML")
             logger.error(self.request.body)
+
         for message in root.findall('MessageNotification'):
-            data = {'text': message.find('Message').text,
+            raw_text = message.find('Message').text
+            encoding = message.find('EncodingFlag').text
+            if encoding == "Unicode":
+                msg_text = ismsformat_to_unicode(raw_text)
+            else:
+                msg_text = raw_text
+            data = {'text': msg_text,
                     'identity': message.find('SenderNumber').text}
         kwargs['data'] = data
         return kwargs
