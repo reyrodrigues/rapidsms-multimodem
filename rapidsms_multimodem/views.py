@@ -79,7 +79,7 @@ def receive_multimodem_message(request):
             Two iSMS servers would have the same modem number.
             Another solution would be to add the phone number to the settings.
             """
-            backend_names = [backend[1] for backend in possible_backends
+            backend_names = [backend[0] for backend in possible_backends
                              if 'sendsms_params' in backend[1]
                              and 'modem' in backend[1]['sendsms_params']
                              and int(backend[1]['sendsms_params']['modem']) == int(modem_number)]
