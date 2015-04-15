@@ -13,6 +13,18 @@ rapidsms-multimodem is released under the BSD License. See the  `LICENSE
 <https://github.com/caktus/rapidsms-multimodem/blob/master/LICENSE.txt>`_ file
 for more details.
 
+Settings
+--------
+
+"multimodem-1": {
+"ENGINE": "rapidsms_multimodem.outgoing.MultiModemBackend",
+    "sendsms_url": "http://192.168.170.200:81/sendmsg",
+    "sendsms_user": "admin",
+    "sendsms_pass": "admin",
+    "sendsms_params": { "modem": 1 },
+},
+
+
 Contributing
 ------------
 

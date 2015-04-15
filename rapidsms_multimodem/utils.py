@@ -37,10 +37,11 @@ def ismsformat_to_unicode(byte_str):
     return unicode_str
 
 
-def isms_urlencode(self, query):
+def isms_urlencode(query):
     """Encode a sequence of two-element tuples into a URL query string.
 
     Customized because `text` parameter must have space characters quoted with %20 instead of +
+    Everything else has to be encoded with quote_plus
     """
     parts = []
     for k, v in query.items():
