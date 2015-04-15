@@ -1,7 +1,7 @@
 rapidsms-multimodem
 ===================
 
-|build-status| |docs|
+|build-status| |coverage| |docs|
 
 `MultiModem iSMS`_ backend for the `RapidSMS`_ project.
 
@@ -42,6 +42,11 @@ Development by `Caktus Consulting Group <http://www.caktusgroup.com/>`_.
     :alt: build status
     :scale: 100%
     :target: https://travis-ci.org/caktus/rapidsms-multimodem
+
+.. |coverage| image:: https://coveralls.io/repos/theirc/rapidsms-multimodem/badge.svg?branch=master
+    :alt: coverage report
+    :scale: 100%
+    :target: https://coveralls.io/r/theirc/rapidsms-multimodem?branch=master
 
 .. |docs| image:: https://readthedocs.org/projects/rapidsms-multimodem/badge/?version=latest
     :alt: Documentation Status

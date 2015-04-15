@@ -1,0 +1,3 @@
+[run]
+source = rapidsms_multimodem
+omit = */tests*,*/migrations/*
