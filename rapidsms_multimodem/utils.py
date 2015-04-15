@@ -14,7 +14,7 @@ def unicode_to_ismsformat(unicode_str):
     encoded_array = bytearray(encoded)
     byte_str = ""
     for i in xrange(0, len(encoded_array), 2):
-        byte_str += "%02x%02x;" % (encoded_array[i], encoded_array[i+1])
+        byte_str += "%02x%02x;" % (encoded_array[i], encoded_array[i + 1])
     return byte_str
 
 

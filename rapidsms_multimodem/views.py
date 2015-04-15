@@ -2,10 +2,10 @@ import logging
 import xml.etree.ElementTree as ET
 
 from django.conf import settings
-from rapidsms.backends.http.views import GenericHttpBackendView
 
-from django.http import HttpResponse, HttpResponseServerError
+from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from .utils import ismsformat_to_unicode
 
 from rapidsms.router import receive
@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
+@require_POST
 def receive_multimodem_message(request):
     """
     The view to handle requests from multimodem has to be custom because the server can post 1-* messages in a single
@@ -25,7 +26,7 @@ def receive_multimodem_message(request):
     :param request:
     :return:
     """
-    xml_data = request.POST['XMLDATA']
+    xml_data = request.POST.get('XMLDATA', '')
     """
     The modem posts the data as it receives it formatted as an xml file. The xml is then URL encoded and posted as a
     form parameter called XML data.
@@ -59,8 +60,8 @@ def receive_multimodem_message(request):
         root = ET.fromstring(xml_data)
     except ET.ParseError:
         logger.error("Failed to parse XML")
-        logger.error(request.body)
-        return HttpResponseServerError('Error parsing XML')
+        logger.error(request)
+        return HttpResponseBadRequest('Error parsing XML')
 
     for message in root.findall('MessageNotification'):
         raw_text = message.find('Message').text
@@ -71,30 +72,32 @@ def receive_multimodem_message(request):
         """
         if ':' in from_number:
             modem_number, phone_number = from_number.split(':')[0:2]
+        else:
+            # This is a single port modem
+            modem_number = from_number
 
-            possible_backends = getattr(settings, 'INSTALLED_BACKENDS', {}).items()
-            """
-            Obviously this needs refactoring.
+        possible_backends = getattr(settings, 'INSTALLED_BACKENDS', {}).items()
+        """
+        Obviously this needs refactoring.
 
-            Two iSMS servers would have the same modem number.
-            Another solution would be to add the phone number to the settings.
-            """
-            backend_names = [backend[0] for backend in possible_backends
-                             if 'sendsms_params' in backend[1]
-                             and 'modem' in backend[1]['sendsms_params']
-                             and int(backend[1]['sendsms_params']['modem']) == int(modem_number)]
-            if possible_backends:
-                backend_name = backend_names[0]
-                encoding = message.find('EncodingFlag').text
-                if encoding.lower() == "unicode":
-                    msg_text = ismsformat_to_unicode(raw_text)
-                else:
-                    msg_text = raw_text
+        Two iSMS servers would have the same modem number.
+        Another solution would be to add the phone number to the settings.
+        """
+        backend_names = [backend[0] for backend in possible_backends
+                         if 'sendsms_params' in backend[1]
+                         and 'modem' in backend[1]['sendsms_params']
+                         and int(backend[1]['sendsms_params']['modem']) == int(modem_number)]
+        if backend_names:
+            backend_name = backend_names[0]
+            encoding = message.find('EncodingFlag').text
+            if encoding.lower() == "unicode":
+                msg_text = ismsformat_to_unicode(raw_text)
+            else:
+                msg_text = raw_text
 
-                connections = lookup_connections(backend_name, [message.find('SenderNumber').text])
-                data = {'text': msg_text,
-                        'connection': connections[0]}
-                receive(**data)
+            connections = lookup_connections(backend_name, [message.find('SenderNumber').text])
+            data = {'text': msg_text,
+                    'connection': connections[0]}
+            receive(**data)
 
     return HttpResponse('OK')
-
