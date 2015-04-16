@@ -1,21 +1,23 @@
+from __future__ import unicode_literals
 import logging
 import xml.etree.ElementTree as ET
 
 from django.conf import settings
-
 from django.http import HttpResponse, HttpResponseBadRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from .utils import ismsformat_to_unicode
 
 from rapidsms.router import receive
 from rapidsms.router import lookup_connections
+
+from .utils import ismsformat_to_unicode
+
 logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
 @require_POST
-def receive_multimodem_message(request):
+def receive_multimodem_message(request, server_slug):
     """
     The view to handle requests from multimodem has to be custom because the server can post 1-* messages in a single
     request. The Rapid built-in class-based views only accept a single message per form/post.
@@ -66,28 +68,26 @@ def receive_multimodem_message(request):
     for message in root.findall('MessageNotification'):
         raw_text = message.find('Message').text
         from_number = message.find('ModemNumber').text
-        """
-        Once we have the modem number we have to try to find its matching backend.
-        Unfortunately, I'll have to dig through the settings.
-        """
+
+        # ModemNumber is simply 1 for single-port modems and it's a string of
+        # 'port_numer:phone_number' for multiport modems.
         if ':' in from_number:
             modem_number, phone_number = from_number.split(':')[0:2]
         else:
             # This is a single port modem
             modem_number = from_number
 
+        # Search through backends looking for the single one with this
+        # server_slug / modem combo
         possible_backends = getattr(settings, 'INSTALLED_BACKENDS', {}).items()
-        """
-        Obviously this needs refactoring.
-
-        Two iSMS servers would have the same modem number.
-        Another solution would be to add the phone number to the settings.
-        """
-        backend_names = [backend[0] for backend in possible_backends
-                         if 'sendsms_params' in backend[1]
-                         and 'modem' in backend[1]['sendsms_params']
-                         and int(backend[1]['sendsms_params']['modem']) == int(modem_number)]
+        backend_names = [name for name, config in possible_backends
+                         if str(config.get('modem_port')) == str(modem_number)
+                         and config.get('server_slug') == server_slug]
         if backend_names:
+            if len(backend_names) > 1:
+                logger.error("More than 1 backend with this server/port combo: %s / %s",
+                             server_slug, modem_number)
+                return HttpResponseBadRequest('Improper Configuration: multiple backends with same server / port')
             backend_name = backend_names[0]
             encoding = message.find('EncodingFlag').text
             if encoding.lower() == "unicode":
@@ -99,5 +99,9 @@ def receive_multimodem_message(request):
             data = {'text': msg_text,
                     'connection': connections[0]}
             receive(**data)
+        else:
+            logger.error("Can't find backend for this server/port combo: %s / %s",
+                         server_slug, modem_number)
+            return HttpResponseBadRequest('Unknown server or port.')
 
     return HttpResponse('OK')
