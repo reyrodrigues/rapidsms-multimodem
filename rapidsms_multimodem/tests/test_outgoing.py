@@ -68,17 +68,3 @@ class SendTest(CreateDataMixin, TestCase):
                      identities=message.connections[0].identity,
                      context={})
         self.assertTrue(mock_requests.get.called)
-
-    # def test_outgoing_unicode_characters(self):
-    #     """Ensure outgoing messages are encoded properly."""
-    #     data = {'text': self.random_unicode_string(20)}
-    #     message = self.create_outgoing_message(data=data)
-    #     config = {'number': '+12223334444',
-    #               'account_sid': self.random_string(34),
-    #               'auth_token': self.random_string(34),
-    #               'encoding': 'UTF-8'}
-    #     backend = TwilioBackend(None, "twilio", config=config)
-    #     data = backend.prepare_message(id_=message.id, text=message.text,
-    #                                    identities=message.connections[0].identity,
-    #                                    context={})
-    #     self.assertEqual(data['body'].decode('UTF-8'), message.text)
