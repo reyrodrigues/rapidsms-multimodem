@@ -38,7 +38,7 @@ def ismsformat_to_unicode(byte_str):
 
 
 def isms_urlencode(query):
-    """Encode a sequence of two-element tuples into a URL query string.
+    """Encode a dictionary into a URL query string.
 
     Customized because `text` parameter must have space characters quoted with %20 instead of +
     Everything else has to be encoded with quote_plus
