@@ -16,7 +16,7 @@ ISMS_UNICODE = 2
 class MultiModemBackend(BackendBase):
     """Outgoing SMS backend for MultiModem iSMS."""
 
-    def configure(self, sendsms_url, sendsms_user=None, sendsms_pass=None,
+    def configure(self, sendsms_url, sendsms_user, sendsms_pass,
                   sendsms_params=None, **kwargs):
         self.sendsms_url = sendsms_url
         self.sendsms_user = sendsms_user
