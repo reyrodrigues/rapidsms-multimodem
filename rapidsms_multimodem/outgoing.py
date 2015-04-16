@@ -1,7 +1,6 @@
+import collections
 import logging
 import requests
-import collections
-import pprint
 
 from rapidsms.backends.base import BackendBase
 
