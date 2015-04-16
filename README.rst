@@ -16,13 +16,33 @@ for more details.
 Settings
 --------
 
-"multimodem-1": {
-"ENGINE": "rapidsms_multimodem.outgoing.MultiModemBackend",
-    "sendsms_url": "http://192.168.170.200:81/sendmsg",
-    "sendsms_user": "admin",
-    "sendsms_pass": "admin",
-    "sendsms_params": { "modem": 1 },
-},
+The following parameters are required: ``sendsms_url``, ``sendsms_user``, ``sendsms_pass``,
+``modem_port``, and ``server_slug``::
+
+  "multimodem-1": {
+      "ENGINE": "rapidsms_multimodem.outgoing.MultiModemBackend",
+      "sendsms_url": "http://192.168.170.200:81/sendmsg",
+      "sendsms_user": "admin",
+      "sendsms_pass": "admin",
+      "modem_port": 1,
+      "server_slug": "isms-lebanon",
+  },
+
+Single port modems only have 1 port, but it should still be specified.
+
+The ``server_slug`` parameter serves 2 purposes. It uniquely identifies the iSMS server, so that
+RapidSMS doesn't get confused by 2 different servers having the same port number (since those are
+restricted to be integers from 1 to 8). It's also used to create the RapidSMS URL that the iSMS
+server will send messages to. Your ``urls.py`` should look something like this::
+
+  urlpatterns = [
+      url(r"^backend/multimodem/(?P<server_slug>[\w_-]+)/$",
+          receive_multimodem_message,
+          name='multimodem-backend'),
+  ]
+
+With the 2 code examples above, your iSMS server should POST messages to
+http://your-rapidsms-server.example.com/backend/multimodem/isms-lebanon/.
 
 
 Contributing

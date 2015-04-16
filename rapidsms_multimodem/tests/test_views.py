@@ -14,11 +14,17 @@ MODEM_1 = {
     'sendsms_url': 'http://192.168.170.200:81/sendmsg',
     'sendsms_user': 'admin',
     'sendsms_pass': 'admin',
-    'sendsms_params': {'modem': 1},
+    'modem_port': 1,
+    'server_slug': 'server-a',
 }
 
 MODEM_2 = copy.deepcopy(MODEM_1)
-MODEM_2['sendsms_params']['modem'] = 2
+MODEM_2['modem_port'] = 2
+
+# setup a third modem on a completely different iSMS server
+MODEM_3 = copy.deepcopy(MODEM_1)
+MODEM_3['sendsms_url'] = 'http://192.168.0.1/sendmsg'
+MODEM_3['server_slug'] = 'server-b'
 
 
 class MultimodemViewTest(RapidTest):
@@ -28,7 +34,9 @@ class MultimodemViewTest(RapidTest):
     backends = {
         'backend-1': MODEM_1,
         'backend-2': MODEM_2,
+        'server-b-backend': MODEM_3,
     }
+    backend_url = reverse('multimodem-backend', kwargs={'server_slug': 'server-a'})
 
     def build_xml_request(self, n=1, message_params=None):
         """Build a valid iSMS XML request.
@@ -76,19 +84,48 @@ class MultimodemViewTest(RapidTest):
     def test_invalid_response(self):
         """HTTP 400 should return if data is invalid."""
         data = {}
-        response = self.client.post(reverse('multimodem-backend'), data)
+        response = self.client.post(self.backend_url, data)
         self.assertEqual(response.status_code, 400)
+
+    def test_message_from_unknown_server(self):
+        """HTTP 400 should return if server is not known to us."""
+        data = {'XMLDATA': self.build_xml_request()}
+        bad_url = reverse('multimodem-backend', kwargs={'server_slug': 'unknown'})
+        response = self.client.post(bad_url, data)
+        self.assertEqual(response.status_code, 400)
+
+    def test_message_from_unknown_port_on_known_server(self):
+        """HTTP 400 should return if port is not known to us."""
+        data = {'XMLDATA': self.build_xml_request(message_params=[{
+            'modem_number': 99,
+        }])}
+        bad_url = reverse('multimodem-backend', kwargs={'server_slug': 'server-a'})
+        response = self.client.post(bad_url, data)
+        self.assertEqual(response.status_code, 400)
+
+    def test_improper_configuration_duplicate_server_port_combo(self):
+        """HTTP 400 should return if server / port combo exist in more than 1 backend"""
+        data = {'XMLDATA': self.build_xml_request()}
+        # Misconfigure so that both backend-1 and backend-2 refer to port 1
+        self.backends['backend-2']['modem_port'] = 1
+        self.set_router()
+        bad_url = reverse('multimodem-backend', kwargs={'server_slug': 'server-a'})
+        response = self.client.post(bad_url, data)
+        self.assertEqual(response.status_code, 400)
+        # undo the misconfiguration for the rest of the testcases in this class
+        self.backends['backend-2']['modem_port'] = 2
+        self.set_router()
 
     def test_get_disabled(self):
         """HTTP 405 should return if GET is used."""
         data = {}
-        response = self.client.get(reverse('multimodem-backend'), data)
+        response = self.client.get(self.backend_url, data)
         self.assertEqual(response.status_code, 405)
 
     def test_valid_post_one_message_single_port(self):
         """Valid POSTs should pass message object to router."""
         data = {'XMLDATA': self.build_xml_request()}
-        response = self.client.post(reverse('multimodem-backend'), data)
+        response = self.client.post(self.backend_url, data)
         self.assertEqual(response.status_code, 200)
         message = self.inbound[0]
         self.assertEqual('a test message', message.text)
@@ -103,7 +140,7 @@ class MultimodemViewTest(RapidTest):
             }
         ])
         data = {'XMLDATA': xmldata}
-        response = self.client.post(reverse('multimodem-backend'), data)
+        response = self.client.post(self.backend_url, data)
         self.assertEqual(response.status_code, 200)
         message = self.inbound[0]
         self.assertEqual('a test message', message.text)
@@ -120,7 +157,7 @@ class MultimodemViewTest(RapidTest):
             }
         ])
         data = {'XMLDATA': xmldata}
-        response = self.client.post(reverse('multimodem-backend'), data)
+        response = self.client.post(self.backend_url, data)
         self.assertEqual(response.status_code, 200)
         message = self.inbound[0]
         self.assertEqual(unicode_string, message.text)
@@ -139,7 +176,7 @@ class MultimodemViewTest(RapidTest):
             }
         ])
         data = {'XMLDATA': xmldata}
-        response = self.client.post(reverse('multimodem-backend'), data)
+        response = self.client.post(self.backend_url, data)
         self.assertEqual(response.status_code, 200)
         message1, message2 = self.inbound
         self.assertEqual('first message', message1.text)
@@ -160,10 +197,25 @@ class MultimodemViewTest(RapidTest):
             }
         ])
         data = {'XMLDATA': xmldata}
-        response = self.client.post(reverse('multimodem-backend'), data)
+        response = self.client.post(self.backend_url, data)
         self.assertEqual(response.status_code, 200)
         message1, message2 = self.inbound
         self.assertEqual('port 1 message', message1.text)
         self.assertEqual('backend-1', message1.connection.backend.name)
         self.assertEqual('port 2 message', message2.text)
         self.assertEqual('backend-2', message2.connection.backend.name)
+
+    def test_messages_from_different_servers_dont_get_confused(self):
+        """Modem 1 on Server A is not confused for Modem 1 on Server B."""
+        xmldata_a = self.build_xml_request()
+        server_a_url = self.backend_url
+        xmldata_b = self.build_xml_request()
+        server_b_url = reverse('multimodem-backend', kwargs={'server_slug': 'server-b'})
+        response_a = self.client.post(server_a_url, data={'XMLDATA': xmldata_a})
+        self.assertEqual(response_a.status_code, 200)
+        response_b = self.client.post(server_b_url, data={'XMLDATA': xmldata_b})
+        self.assertEqual(response_b.status_code, 200)
+        self.assertEqual(len(self.inbound), 2)
+        message1, message2 = self.inbound
+        self.assertEqual('backend-1', message1.connection.backend.name)
+        self.assertEqual('server-b-backend', message2.connection.backend.name)

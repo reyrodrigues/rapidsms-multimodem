@@ -15,11 +15,13 @@ ISMS_UNICODE = 2
 class MultiModemBackend(BackendBase):
     """Outgoing SMS backend for MultiModem iSMS."""
 
-    def configure(self, sendsms_url, sendsms_user, sendsms_pass,
-                  sendsms_params=None, **kwargs):
+    def configure(self, sendsms_url, sendsms_user, sendsms_pass, modem_port,
+                  server_slug, sendsms_params=None):
         self.sendsms_url = sendsms_url
         self.sendsms_user = sendsms_user
         self.sendsms_pass = sendsms_pass
+        self.modem_port = modem_port
+        self.server_slug = server_slug
         self.sendsms_params = sendsms_params or {}
 
     def prepare_querystring(self, id_, text, identities, context):
@@ -31,7 +33,7 @@ class MultiModemBackend(BackendBase):
         params['passwd'] = self.sendsms_pass
         params['cat'] = 1
         params['enc'] = ISMS_ASCII
-        params['modem'] = self.sendsms_params.get('modem', 0)
+        params['modem'] = self.modem_port
         params['to'] = to
         # 'text' is tricky. iSMS has 3 encodings: ascii, enhanced ascii, and 'unicode'
         # (Note: it's not really Unicode, but a iSMS custom binary format)

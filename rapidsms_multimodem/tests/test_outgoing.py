@@ -16,7 +16,8 @@ class SendTest(CreateDataMixin, TestCase):
             'sendsms_url': 'http://192.168.170.200:81/sendmsg',
             'sendsms_user': 'admin',
             'sendsms_pass': 'admin',
-            'sendsms_params': {'modem': 1},
+            'modem_port': 1,
+            'server_slug': 'isms-lebanon',
         }
         self.backend = MultiModemBackend(None, "multimodem", **config)
 
