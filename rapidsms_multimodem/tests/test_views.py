@@ -8,7 +8,7 @@ from rapidsms.tests.harness import RapidTest
 
 from ..utils import unicode_to_ismsformat
 
-# setup 2 ports on a iSMS multiport modem
+# setup 2 modems on a iSMS multiport modem
 MODEM_1 = {
     'ENGINE': 'rapidsms_multimodem.outgoing.MultiModemBackend',
     'sendsms_url': 'http://192.168.170.200:81/sendmsg',
@@ -141,14 +141,12 @@ class MultimodemViewTest(RapidTest):
         data = {'XMLDATA': xmldata}
         response = self.client.post(reverse('multimodem-backend'), data)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(self.inbound), 2)
-        message = self.inbound[0]
-        self.assertEqual('first message', message.text)
-        self.assertEqual('backend-1', message.connection.backend.name)
-        message = self.inbound[1]
-        self.assertEqual('second message', message.text)
-        self.assertEqual('+19195551313', message.connections[0].identity)
-        self.assertEqual('backend-1', message.connection.backend.name)
+        message1, message2 = self.inbound
+        self.assertEqual('first message', message1.text)
+        self.assertEqual('backend-1', message1.connection.backend.name)
+        self.assertEqual('second message', message2.text)
+        self.assertEqual('+19195551313', message2.connections[0].identity)
+        self.assertEqual('backend-1', message2.connection.backend.name)
 
     def test_messages_from_different_ports_get_to_different_backends(self):
         xmldata = self.build_xml_request(n=2, message_params=[
@@ -164,10 +162,8 @@ class MultimodemViewTest(RapidTest):
         data = {'XMLDATA': xmldata}
         response = self.client.post(reverse('multimodem-backend'), data)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(self.inbound), 2)
-        message = self.inbound[0]
-        self.assertEqual('port 1 message', message.text)
-        self.assertEqual('backend-1', message.connection.backend.name)
-        message = self.inbound[1]
-        self.assertEqual('port 2 message', message.text)
-        self.assertEqual('backend-2', message.connection.backend.name)
+        message1, message2 = self.inbound
+        self.assertEqual('port 1 message', message1.text)
+        self.assertEqual('backend-1', message1.connection.backend.name)
+        self.assertEqual('port 2 message', message2.text)
+        self.assertEqual('backend-2', message2.connection.backend.name)
