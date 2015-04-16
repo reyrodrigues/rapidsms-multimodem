@@ -23,9 +23,8 @@ class MultiModemBackend(BackendBase):
         self.sendsms_pass = sendsms_pass
         self.sendsms_params = sendsms_params or {}
 
-    def prepare_request(self, id_, text, identities, context):
-        """Construct outbound data for requests.get."""
-        kwargs = {'url': self.sendsms_url}
+    def prepare_querystring(self, id_, text, identities, context):
+        """Construct querystring to pass to requests.get."""
         to = ', '.join('"' + identity + '"' for identity in identities)
         # Send API requires a specific query params order
         params = collections.OrderedDict()
@@ -51,15 +50,12 @@ class MultiModemBackend(BackendBase):
         else:
             params['text'] = unicode_to_ismsformat(text)
         params.update(self.sendsms_params)
-        kwargs['params'] = params
-        return kwargs
+        return isms_urlencode(params)
 
     def send(self, id_, text, identities, context={}):
         logger.debug('Sending message: %s' % text)
-        kwargs = self.prepare_request(id_, text, identities, context)
-        logger.debug('params: %s' % pprint.pformat(kwargs["params"]))
-        params = isms_urlencode(kwargs['params'])
-        r = requests.get(url=kwargs['url'], params=params)
+        query_string = self.prepare_querystring(id_, text, identities, context)
+        r = requests.get(url=self.sendsms_url, params=query_string)
         if r.status_code != requests.codes.ok:
             r.raise_for_status()
         if "Err" in r.text:
