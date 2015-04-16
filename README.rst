@@ -43,10 +43,10 @@ Development by `Caktus Consulting Group <http://www.caktusgroup.com/>`_.
     :scale: 100%
     :target: https://travis-ci.org/caktus/rapidsms-multimodem
 
-.. |coverage| image:: https://coveralls.io/repos/theirc/rapidsms-multimodem/badge.svg?branch=master
+.. |coverage| image:: https://coveralls.io/repos/caktus/rapidsms-multimodem/badge.svg?branch=master
     :alt: coverage report
     :scale: 100%
-    :target: https://coveralls.io/r/theirc/rapidsms-multimodem?branch=master
+    :target: https://coveralls.io/r/caktus/rapidsms-multimodem?branch=master
 
 .. |docs| image:: https://readthedocs.org/projects/rapidsms-multimodem/badge/?version=latest
     :alt: Documentation Status
