@@ -55,11 +55,18 @@ class MultiModemBackend(BackendBase):
 
     def send(self, id_, text, identities, context={}):
         logger.debug('Sending message: %s' % text)
-        query_string = self.prepare_querystring(id_, text, identities, context)
-        r = requests.get(url=self.sendsms_url, params=query_string)
-        if r.status_code != requests.codes.ok:
-            r.raise_for_status()
-        if "Err" in r.text:
-            logger.error("Send API failed with %s" % r.text)
-            logger.error("URL: %s" % r.url)
-        logger.debug("URL: %s" % r.url)
+
+        # Splitting the identities because iSMS wasn't able to handle
+        # identities in a single message.
+        for identity in identities:
+            # Maybe this needs to be paged
+            # How do we handle a single failure?
+            
+            query_string = self.prepare_querystring(id_, text, [identity], context)
+            r = requests.get(url=self.sendsms_url, params=query_string)
+            if r.status_code != requests.codes.ok:
+                r.raise_for_status()
+            if "Err" in r.text:
+                logger.error("Send API failed with %s" % r.text)
+                logger.error("URL: %s" % r.url)
+            logger.debug("URL: %s" % r.url)
