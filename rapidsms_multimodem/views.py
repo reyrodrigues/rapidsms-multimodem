@@ -70,9 +70,20 @@ def receive_multimodem_message(request, server_slug):
         from_number = message.find('ModemNumber').text
 
         # ModemNumber is simply 1 for single-port modems and it's a string of
-        # 'port_numer:phone_number' for multiport modems.
+        # 'port_number:phone_number' for multiport modems.
+
+        # RR: This gets a little more complicated than that. If the modem is not set up correctly,
+        # this field will be only the index of the number. The possible values are:
+        # <ModemNumber>[Index]:[Configured Phone Number]</ModemNumber> -- for multi-port and configured
+        # <ModemNumber>[Configured Phone Number]</ModemNumber> -- for single port and configured
+        # <ModemNumber>[Index]</ModemNumber> -- for multi-port and not configured
+        # <ModemNumber> ????? </ModemNumber> -- for single port and not configured
+
         if ':' in from_number:
             modem_number, phone_number = from_number.split(':')[0:2]
+        elif len(from_number) == 1:
+            # Not properly configured
+            modem_number = from_number
         else:
             # This is a single port modem
             modem_number = from_number
